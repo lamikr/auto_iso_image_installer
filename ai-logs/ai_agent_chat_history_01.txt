@@ -207,8 +207,90 @@ Current key artifact paths:
 - Builder: ~/rockylinux_8_10_iso/build_rockylinux_8_10_iso.py
 - Validator: ~/rockylinux_8_10_iso/validate-config.py
 - Kickstart template: ~/rockylinux_8_10_iso/templates/rocky8.ks.tmpl
-- Generated kickstart: ~/rockylinux_8_10_iso/build/ks.cfg
+- Generated kickstart: ~/rockylinux_8_10_iso/output/kickstart/rocky8.ks
 - Output ISO: ~/rockylinux_8_10_iso/output/Rocky-8.10-x86_64-autoinstall.iso
 - Generated SSH key:
   - private: ~/rockylinux_8_10_iso/output/ssh/therock_ed25519
   - public : ~/rockylinux_8_10_iso/output/ssh/therock_ed25519.pub
+
+---
+
+Session update: 2026-07-01
+
+USER: After last session, I made manual changes.
+ASSISTANT:
+- Synced workspace state and verified:
+  - git repository initialized and clean on `master`
+  - `.gitignore` present
+  - chat logs moved under `ai-logs/`
+  - one prior root-level log file removed
+
+USER: Change generated Kickstart path/name.
+ASSISTANT:
+- Updated Kickstart output path from `./build/ks.cfg` to:
+  - `./output/kickstart/rocky8.ks`
+- Applied in:
+  - `build-config.json`
+  - `validate-config.py`
+  - `build_rockylinux_8_10_iso.py`
+
+USER: Avoid repeating build-config values in Python files.
+ASSISTANT:
+- Refactored validation definitions to keys-only (`REQUIRED_KEYS`) in:
+  - `validate-config.py`
+  - `build_rockylinux_8_10_iso.py`
+- Removed duplicated example values from both files.
+
+USER: Make validation errors more explicit.
+ASSISTANT:
+- Updated both validators to split errors into:
+  - `Missing required keys`
+  - `Required keys with empty values`
+
+USER: Add QEMU launch script without GPU passthrough.
+ASSISTANT:
+- Added executable script:
+  - `testing/qemu_iso_launch.sh`
+- Includes:
+  - usage instructions
+  - non-passthrough virtual display launch
+  - SSH login command using generated `therock` key
+  - SSH polling loop example
+
+USER: Add instructions for SSH login with generated key.
+ASSISTANT:
+- Added instructions to:
+  - `testing/qemu_iso_launch.sh`
+  - `README.md`
+
+USER: Add similar launch script using PCI passthrough with PCI IDs from config.
+ASSISTANT:
+- Added config key:
+  - `"pci_passthrough_device_ids": []`
+- Added executable script:
+  - `testing/qemu_iso_launch_pci_passthrough.sh`
+- Script behavior:
+  - reads PCI IDs from `build-config.json`
+  - validates IDs exist
+  - validates devices are bound to `vfio-pci`
+  - validates `/dev/vfio/vfio` exists
+  - launches QEMU with `vfio-pci` devices
+- Added matching documentation section in `README.md`.
+
+---
+
+Session update: 2026-07-01 (follow-up)
+
+USER: Update ai-logs/ai_agent_chat_history_01.txt again.
+ASSISTANT:
+- Refreshed chat history with latest workspace state and actions.
+
+USER: chat_history_01.txt is not needed and remove SESSION_NOTES.md.
+ASSISTANT:
+- Removed `SESSION_NOTES.md`.
+- `chat_history_01.txt` was already absent (no deletion required).
+
+Current log/note file status:
+- `ai-logs/ai_agent_chat_history_01.txt` exists and is current.
+- `chat_history_01.txt` does not exist.
+- `SESSION_NOTES.md` does not exist.

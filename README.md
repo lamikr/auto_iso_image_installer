@@ -69,6 +69,59 @@ Example login after install:
 ssh -i ./output/ssh/therock_ed25519 therock@<installed-host-ip>
 ```
 
+## Launch with QEMU/KVM (No GPU passthrough)
+
+Use the helper script:
+
+```bash
+./testing/qemu_iso_launch.sh
+```
+
+This launch path uses virtual display devices only and does not use GPU PCI passthrough (`vfio-pci`).
+It forwards host `127.0.0.1:2222` to guest `:22` by default.
+
+After installer completes and the VM boots into the installed OS, connect with:
+
+```bash
+ssh -i ./output/ssh/therock_ed25519 \
+  -o StrictHostKeyChecking=no \
+  -o UserKnownHostsFile=/dev/null \
+  -p 2222 therock@127.0.0.1
+```
+
+If SSH is not ready yet, poll until it becomes available:
+
+```bash
+for i in $(seq 1 120); do
+  ssh -i ./output/ssh/therock_ed25519 \
+    -o BatchMode=yes \
+    -o StrictHostKeyChecking=no \
+    -o UserKnownHostsFile=/dev/null \
+    -o ConnectTimeout=5 \
+    -p 2222 therock@127.0.0.1 "echo SSH_OK && id" && break
+  sleep 10
+done
+```
+
+## Launch with QEMU/KVM (PCI passthrough)
+
+1) Set PCI IDs in `build-config.json`:
+
+```json
+"pci_passthrough_device_ids": ["0000:01:00.0", "0000:01:00.1"]
+```
+
+2) Make sure those devices are bound to `vfio-pci` on the host.
+
+3) Launch with passthrough script:
+
+```bash
+./testing/qemu_iso_launch_pci_passthrough.sh
+```
+
+This script reads PCI IDs from `build-config.json` and fails early if IDs are missing,
+not present on host, or not bound to `vfio-pci`.
+
 ## Notes
 
 - The Kickstart template uses `clearpart --all --initlabel` with explicit partition rules, which wipes target disks during install.

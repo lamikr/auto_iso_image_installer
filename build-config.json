@@ -5,7 +5,7 @@
   "source_iso_path": "./cache/Rocky-8.10-x86_64-minimal.iso",
   "output_iso_path": "./output/Rocky-8.10-x86_64-autoinstall.iso",
   "kickstart_template": "./templates/rocky8.ks.tmpl",
-  "kickstart_output": "./build/ks.cfg",
+  "kickstart_output": "./output/kickstart/rocky8.ks",
   "lang": "en_US.UTF-8",
   "keyboard": "us",
   "timezone": "UTC",
@@ -18,5 +18,6 @@
   "generate_ssh_key_if_missing": true,
   "ssh_authorized_public_key": "",
   "ssh_private_key_path": "./output/ssh/therock_ed25519",
-  "ssh_public_key_path": "./output/ssh/therock_ed25519.pub"
+  "ssh_public_key_path": "./output/ssh/therock_ed25519.pub",
+  "pci_passthrough_device_ids": []
 }

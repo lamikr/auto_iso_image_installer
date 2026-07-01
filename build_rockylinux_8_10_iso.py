@@ -18,28 +18,28 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 
-EXPECTED_PAIRS: dict[str, object] = {
-    "rocky_version": "8.10",
-    "source_iso_url": "https://download.rockylinux.org/pub/rocky/8.10/isos/x86_64/Rocky-8.10-x86_64-minimal.iso",
-    "source_iso_sha256": "",
-    "source_iso_path": "./cache/Rocky-8.10-x86_64-minimal.iso",
-    "output_iso_path": "./output/Rocky-8.10-x86_64-autoinstall.iso",
-    "kickstart_template": "./templates/rocky8.ks.tmpl",
-    "kickstart_output": "./build/ks.cfg",
-    "lang": "en_US.UTF-8",
-    "keyboard": "us",
-    "timezone": "UTC",
-    "hostname": "rocky810-auto",
-    "user_name": "therock",
-    "disable_user_password_auth": True,
-    "disable_sudo_password_prompt": True,
-    "enable_sshd": True,
-    "allow_ping_icmp": True,
-    "generate_ssh_key_if_missing": True,
-    "ssh_authorized_public_key": "",
-    "ssh_private_key_path": "./output/ssh/therock_ed25519",
-    "ssh_public_key_path": "./output/ssh/therock_ed25519.pub",
-}
+REQUIRED_KEYS = [
+    "rocky_version",
+    "source_iso_url",
+    "source_iso_sha256",
+    "source_iso_path",
+    "output_iso_path",
+    "kickstart_template",
+    "kickstart_output",
+    "lang",
+    "keyboard",
+    "timezone",
+    "hostname",
+    "user_name",
+    "disable_user_password_auth",
+    "disable_sudo_password_prompt",
+    "enable_sshd",
+    "allow_ping_icmp",
+    "generate_ssh_key_if_missing",
+    "ssh_authorized_public_key",
+    "ssh_private_key_path",
+    "ssh_public_key_path",
+]
 
 ALLOW_EMPTY_STRING = {"source_iso_sha256", "ssh_authorized_public_key"}
 
@@ -85,25 +85,29 @@ def _load_config(config_path: Path) -> dict[str, object]:
 
 def _validate_config(cfg: dict[str, object]) -> None:
     missing: list[str] = []
-    for key in EXPECTED_PAIRS:
+    empty: list[str] = []
+    for key in REQUIRED_KEYS:
         if key not in cfg:
-            missing.append(f"{key}={EXPECTED_PAIRS[key]!r}")
+            missing.append(key)
             continue
 
         value = cfg[key]
         if value is None:
-            missing.append(f"{key}={EXPECTED_PAIRS[key]!r}")
+            missing.append(key)
             continue
 
         if isinstance(value, str) and key not in ALLOW_EMPTY_STRING and value.strip() == "":
-            missing.append(f"{key}={EXPECTED_PAIRS[key]!r}")
+            empty.append(key)
 
-    if missing:
-        lines = "\n  - ".join(missing)
-        raise BuildConfigError(
-            "Missing required key-value pairs in build-config.json:\n"
-            f"  - {lines}"
-        )
+    if missing or empty:
+        parts: list[str] = ["Invalid build-config.json:"]
+        if missing:
+            parts.append("Missing required keys:")
+            parts.extend(f"  - {entry}" for entry in missing)
+        if empty:
+            parts.append("Required keys with empty values:")
+            parts.extend(f"  - {entry}" for entry in empty)
+        raise BuildConfigError("\n".join(parts))
 
 
 def _download_file(url: str, destination: Path, retries: int = 3, delay_seconds: int = 2) -> None:
