@@ -22,13 +22,15 @@ clearpart --all --initlabel
 reqpart
 part /boot --fstype=xfs --size=1536
 part swap --recommended
-part / --fstype=xfs --size=8192 --grow
+part / --fstype=xfs --size=30720 --grow
 
 %packages
 @^minimal-environment
 sudo
 openssh-server
 openssh-clients
+vim-minimal
+net-tools
 %end
 
 %post --erroronfail --log=/root/ks-post.log

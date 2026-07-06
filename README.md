@@ -79,6 +79,8 @@ Use the helper script:
 
 This launch path uses virtual display devices only and does not use GPU PCI passthrough (`vfio-pci`).
 It forwards host `127.0.0.1:2222` to guest `:22` by default.
+The helper script defaults to a `60G` disk to satisfy current partitioning requirements.
+If you override disk size manually, keep it at least about `40G` (recommended `60G`).
 
 After installer completes and the VM boots into the installed OS, connect with:
 
@@ -121,11 +123,13 @@ done
 
 This script reads PCI IDs from `build-config.json` and fails early if IDs are missing,
 not present on host, or not bound to `vfio-pci`.
+It also defaults to a `60G` disk to satisfy current partitioning requirements.
 
 ## Notes
 
 - The Kickstart template uses `clearpart --all --initlabel` with explicit partition rules, which wipes target disks during install.
 - `/boot` is explicitly set to `1536 MiB` (1.5 GiB).
+- `/` has minimum size `30720 MiB` (30 GiB) and then grows to fill remaining space.
 - `/home` is not created as a separate filesystem; user homes live under `/`.
 - SSH key authorization for `therock` is configured by Kickstart `sshkey` during install.
 - Boot configs are patched to default to direct install (skip media-check default) and include serial console args for headless VM troubleshooting.

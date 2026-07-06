@@ -14,7 +14,7 @@ set -euo pipefail
 # Optional environment variables:
 #   RAM_MB=4096           Memory for VM in MB
 #   CPUS=2                Number of virtual CPUs
-#   DISK_SIZE=30G         Created qcow2 size when DISK_PATH is missing
+#   DISK_SIZE=60G         Created qcow2 size when DISK_PATH is missing
 #   SSH_FWD_PORT=2222     Host TCP port forwarded to guest 22
 #   VM_NAME=rocky810-test VM name shown by QEMU
 #   HEADLESS=0            Set to 1 for no GUI window
@@ -50,7 +50,7 @@ DISK_PATH="${2:-${REPO_ROOT}/output/rocky810-test.qcow2}"
 
 RAM_MB="${RAM_MB:-4096}"
 CPUS="${CPUS:-2}"
-DISK_SIZE="${DISK_SIZE:-30G}"
+DISK_SIZE="${DISK_SIZE:-60G}"
 SSH_FWD_PORT="${SSH_FWD_PORT:-2222}"
 VM_NAME="${VM_NAME:-rocky810-test}"
 HEADLESS="${HEADLESS:-0}"

@@ -294,3 +294,29 @@ Current log/note file status:
 - `ai-logs/ai_agent_chat_history_01.txt` exists and is current.
 - `chat_history_01.txt` does not exist.
 - `SESSION_NOTES.md` does not exist.
+
+---
+
+Session update: 2026-07-01 (partition/packages)
+
+USER: Increase size reserved for root partition by 15 GB.
+ASSISTANT:
+- Updated Kickstart root minimum from `8192 MiB` to `23552 MiB`:
+  - `templates/rocky8.ks.tmpl`
+- Updated partition note in:
+  - `README.md`
+
+USER: Increase size again to 30 GB.
+ASSISTANT:
+- Updated Kickstart root minimum from `23552 MiB` to `30720 MiB` (30 GiB):
+  - `templates/rocky8.ks.tmpl`
+- Updated partition note in:
+  - `README.md`
+
+USER: Install vim and net-tools automatically.
+ASSISTANT:
+- Added packages to Kickstart `%packages`:
+  - `vim-enhanced`
+  - `net-tools`
+- File updated:
+  - `templates/rocky8.ks.tmpl`

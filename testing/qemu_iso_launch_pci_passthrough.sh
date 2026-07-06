@@ -13,7 +13,7 @@ set -euo pipefail
 # Optional environment variables:
 #   RAM_MB=8192                Memory for VM in MB
 #   CPUS=4                     Number of virtual CPUs
-#   DISK_SIZE=40G              Created qcow2 size when DISK_PATH is missing
+#   DISK_SIZE=60G              Created qcow2 size when DISK_PATH is missing
 #   SSH_FWD_PORT=2222          Host TCP port forwarded to guest 22
 #   VM_NAME=rocky810-pci-test  VM name shown by QEMU
 #   ACCEL_MODE=kvm             Acceleration mode, e.g. kvm or kvm:tcg
@@ -31,7 +31,7 @@ DISK_PATH="${3:-${REPO_ROOT}/output/rocky810-test-pci.qcow2}"
 
 RAM_MB="${RAM_MB:-8192}"
 CPUS="${CPUS:-4}"
-DISK_SIZE="${DISK_SIZE:-40G}"
+DISK_SIZE="${DISK_SIZE:-60G}"
 SSH_FWD_PORT="${SSH_FWD_PORT:-2222}"
 VM_NAME="${VM_NAME:-rocky810-pci-test}"
 ACCEL_MODE="${ACCEL_MODE:-kvm}"
