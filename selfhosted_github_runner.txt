@@ -1,0 +1,208 @@
+Self-hosted GitHub Actions runner setup for hostname
+====================================================
+
+Host assumptions
+----------------
+
+The host at 'hostname' runs Ubuntu 24.04 and already has PCI passthrough
+configured. The GitHub Actions workflow expects this host to run a self-hosted
+GitHub runner with labels matching the workflow inputs.
+
+
+1. Create the runner in GitHub
+-----------------------------
+
+In the GitHub repository, go to:
+
+Settings -> Actions -> Runners -> New self-hosted runner
+
+Choose:
+
+- OS: Linux
+- Architecture: x64
+
+GitHub will show commands similar to:
+
+mkdir actions-runner && cd actions-runner
+curl -o actions-runner-linux-x64-*.tar.gz -L https://github.com/actions/runner/releases/download/...
+tar xzf ./actions-runner-linux-x64-*.tar.gz
+./config.sh --url https://github.com/<OWNER>/<REPO> --token <TOKEN>
+
+Use the exact URL and token shown by GitHub.
+
+
+2. Add the required runner labels
+---------------------------------
+
+When config.sh asks for labels, add:
+
+linux,x64,kvm,vfio,hostname
+
+For non-interactive setup, use:
+
+./config.sh \
+  --url https://github.com/<OWNER>/<REPO> \
+  --token <TOKEN> \
+  --labels linux,x64,kvm,vfio,hostname
+
+The workflow schedules on:
+
+self-hosted, linux, x64, kvm, vfio, hostname
+
+The self-hosted label is added automatically by GitHub.
+
+If you use a different hostname, register that hostname as a runner label and pass it
+as the runner_hostname workflow input.
+
+
+3. Install and start the runner service
+---------------------------------------
+
+From the actions-runner directory:
+
+sudo ./svc.sh install
+sudo ./svc.sh start
+
+Check status:
+
+sudo ./svc.sh status
+
+
+4. Install host packages
+------------------------
+
+On Ubuntu 24.04:
+
+sudo apt update
+sudo apt install -y \
+  qemu-system-x86 \
+  qemu-utils \
+  openssh-client \
+  pciutils
+
+The workflow can try to install these packages, but preinstalling them is
+recommended.
+
+
+5. Confirm KVM and VFIO access
+------------------------------
+
+Check that KVM and VFIO devices exist:
+
+ls -l /dev/kvm
+ls -l /dev/vfio/vfio
+
+Check that the passthrough PCI device is bound to vfio-pci:
+
+lspci -nnk
+
+For a specific device:
+
+readlink /sys/bus/pci/devices/0000:03:00.0/driver
+
+The output should end with:
+
+vfio-pci
+
+
+6. Put the QCOW image on the host
+---------------------------------
+
+The workflow default path is:
+
+/var/lib/libvirt/images/rockylinux-8.10-therock.qcow2
+
+Example:
+
+sudo mkdir -p /var/lib/libvirt/images
+sudo cp rockylinux-8.10-therock.qcow2 /var/lib/libvirt/images/
+sudo chmod 644 /var/lib/libvirt/images/rockylinux-8.10-therock.qcow2
+
+If the image is stored somewhere else, pass that path as the qcow_image_path
+workflow input when starting the workflow manually.
+
+
+7. Configure SSH access for the therock VM user
+-----------------------------------------------
+
+Inside the QCOW image, the therock user needs this file:
+
+/home/therock/.ssh/authorized_keys
+
+It must contain the public key matching the private key used by the workflow.
+
+The VM should also have:
+
+- sshd enabled and running
+- the therock user configured for passwordless sudo
+
+There are two supported ways to provide the private key.
+
+
+Option A: Store the private key in GitHub Actions secrets
+--------------------------------------------------------
+
+In GitHub, add the private key as a repository, organization, or environment
+secret.
+
+Settings -> Secrets and variables -> Actions -> New repository secret
+
+Secret name:
+
+THEROCK_VM_SSH_KEY
+
+Leave the vm_ssh_private_key_path workflow input empty. The workflow will write
+the secret to a temporary SSH key file on the runner and use it to connect to
+the VM.
+
+
+Option B: Store the private key locally on the self-hosted runner
+----------------------------------------------------------------
+
+Put the private key on the hostname host, for example:
+
+/home/github-runner/.ssh/therock_vm_key
+
+Set ownership and permissions so only the GitHub runner service user can read
+it:
+
+sudo chown github-runner:github-runner /home/github-runner/.ssh/therock_vm_key
+sudo chmod 600 /home/github-runner/.ssh/therock_vm_key
+
+When starting the workflow manually, set:
+
+vm_ssh_private_key_path=/home/github-runner/.ssh/therock_vm_key
+
+If vm_ssh_private_key_path is set, the workflow uses that local file and does
+not require the THEROCK_VM_SSH_KEY secret.
+
+
+8. Run the workflow
+-------------------
+
+In GitHub:
+
+Actions -> Test ROCm QCOW VM -> Run workflow
+
+Use the default hostname value:
+
+'hostname'
+
+Provide the PCI device BDFs to pass through, for example:
+
+0000:03:00.0 0000:03:00.1
+
+Choose one SSH key source:
+
+- Leave vm_ssh_private_key_path empty to use the THEROCK_VM_SSH_KEY secret.
+- Set vm_ssh_private_key_path to a local runner key file path.
+
+The workflow should then:
+
+1. Schedule on the self-hosted runner.
+2. Start QEMU/KVM with the QCOW image.
+3. Attach the requested vfio-pci devices.
+4. SSH into the VM as therock.
+5. Add /etc/yum.repos.d/rocm.repo.
+6. Install amdrocm-core-sdk and amdrocm-fft-test.
+7. Run /opt/rocm/bin/rocfft-test.
